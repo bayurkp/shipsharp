@@ -1,0 +1,6 @@
+@ShipSharp.API_HostAddress = http://localhost:5057
+
+GET {{ShipSharp.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
