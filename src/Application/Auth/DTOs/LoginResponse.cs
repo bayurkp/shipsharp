@@ -13,6 +13,9 @@ public class LoginResponse
     [JsonPropertyName("expires_in")]
     public int ExpiresIn { get; set; } = 3600;
 
+    [JsonPropertyName("refresh_token")]
+    public string RefreshToken { get; set; } = string.Empty;
+
     [JsonPropertyName("user")]
     public UserDto User { get; set; } = null!;
 }

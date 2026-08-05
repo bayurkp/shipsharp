@@ -31,6 +31,17 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
                 options.UseSqlite(_connection);
             });
 
+            services.PostConfigure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
+            {
+                var stjFormatter = options.OutputFormatters.OfType<Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonOutputFormatter>().FirstOrDefault();
+                if (stjFormatter != null)
+                {
+                    var serializerOptions = stjFormatter.SerializerOptions;
+                    options.OutputFormatters.Remove(stjFormatter);
+                    options.OutputFormatters.Insert(0, new StreamSystemTextJsonOutputFormatter(serializerOptions));
+                }
+            });
+
             var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -42,5 +53,25 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         _connection?.Dispose();
+    }
+}
+
+public class StreamSystemTextJsonOutputFormatter : Microsoft.AspNetCore.Mvc.Formatters.TextOutputFormatter
+{
+    private readonly System.Text.Json.JsonSerializerOptions _jsonSerializerOptions;
+
+    public StreamSystemTextJsonOutputFormatter(System.Text.Json.JsonSerializerOptions jsonSerializerOptions)
+    {
+        _jsonSerializerOptions = jsonSerializerOptions;
+        SupportedEncodings.Add(System.Text.Encoding.UTF8);
+        SupportedMediaTypes.Add("application/json");
+        SupportedMediaTypes.Add("text/json");
+    }
+
+    public override async Task WriteResponseBodyAsync(Microsoft.AspNetCore.Mvc.Formatters.OutputFormatterWriteContext context, System.Text.Encoding selectedEncoding)
+    {
+        var httpContext = context.HttpContext;
+        var responseStream = httpContext.Response.Body;
+        await System.Text.Json.JsonSerializer.SerializeAsync(responseStream, context.Object, context.ObjectType ?? typeof(object), _jsonSerializerOptions, httpContext.RequestAborted);
     }
 }

@@ -13,23 +13,26 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordService _passwordService;
     private readonly ITokenService _tokenService;
-    private readonly IValidator<LoginRequest> _validator;
+    private readonly IValidator<LoginRequest> _loginValidator;
+    private readonly IValidator<RefreshTokenRequest> _refreshValidator;
 
     public AuthService(
         IUserRepository userRepository,
         IPasswordService passwordService,
         ITokenService tokenService,
-        IValidator<LoginRequest> validator)
+        IValidator<LoginRequest> loginValidator,
+        IValidator<RefreshTokenRequest> refreshValidator)
     {
         _userRepository = userRepository;
         _passwordService = passwordService;
         _tokenService = tokenService;
-        _validator = validator;
+        _loginValidator = loginValidator;
+        _refreshValidator = refreshValidator;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        var validationResult = await _validator.ValidateAsync(request, cancellationToken);
+        var validationResult = await _loginValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
             var details = validationResult.Errors.Select(e => new ApiErrorDetail
@@ -47,19 +50,82 @@ public class AuthService : IAuthService
             throw new UnprocessableEntityException("Invalid username or password.", "invalid_credentials");
         }
 
-        var token = _tokenService.GenerateJwtToken(user);
+        var accessToken = _tokenService.GenerateJwtToken(user);
+        var refreshTokenValue = _tokenService.GenerateRefreshToken();
+
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshTokenValue,
+            ExpiryTime = DateTime.UtcNow.AddDays(7)
+        };
+
+        await _userRepository.AddRefreshTokenAsync(refreshToken, cancellationToken);
 
         return new LoginResponse
         {
-            AccessToken = token,
+            AccessToken = accessToken,
             TokenType = "Bearer",
             ExpiresIn = 3600,
+            RefreshToken = refreshTokenValue,
             User = new UserDto
             {
                 Id = user.Id,
                 Username = user.Username,
                 FullName = user.FullName,
                 Role = user.Role.ToString()
+            }
+        };
+    }
+
+    public async Task<LoginResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    {
+        var validationResult = await _refreshValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var details = validationResult.Errors.Select(e => new ApiErrorDetail
+            {
+                Field = e.PropertyName,
+                Code = e.ErrorCode,
+                Message = e.ErrorMessage
+            });
+            throw new ValidationException(details);
+        }
+
+        var existingToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
+        if (existingToken == null || existingToken.IsRevoked || existingToken.ExpiryTime <= DateTime.UtcNow)
+        {
+            throw new UnprocessableEntityException("Invalid or expired refresh token.", "invalid_refresh_token");
+        }
+
+        // Revoke current refresh token (rotation)
+        existingToken.IsRevoked = true;
+        await _userRepository.UpdateRefreshTokenAsync(existingToken, cancellationToken);
+
+        var newAccessToken = _tokenService.GenerateJwtToken(existingToken.User);
+        var newRefreshTokenValue = _tokenService.GenerateRefreshToken();
+
+        var newRefreshToken = new RefreshToken
+        {
+            UserId = existingToken.UserId,
+            Token = newRefreshTokenValue,
+            ExpiryTime = DateTime.UtcNow.AddDays(7)
+        };
+
+        await _userRepository.AddRefreshTokenAsync(newRefreshToken, cancellationToken);
+
+        return new LoginResponse
+        {
+            AccessToken = newAccessToken,
+            TokenType = "Bearer",
+            ExpiresIn = 3600,
+            RefreshToken = newRefreshTokenValue,
+            User = new UserDto
+            {
+                Id = existingToken.User.Id,
+                Username = existingToken.User.Username,
+                FullName = existingToken.User.FullName,
+                Role = existingToken.User.Role.ToString()
             }
         };
     }

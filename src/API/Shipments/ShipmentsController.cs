@@ -21,11 +21,11 @@ public class ShipmentsController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Operator")]
-    public async Task<IActionResult> GetPaged([FromQuery] int page = 1, [FromQuery] int per_page = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetPaged([FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _shipmentService.GetPagedAsync(page, per_page, cancellationToken);
+        var (items, totalCount) = await _shipmentService.GetPagedAsync(page, perPage, cancellationToken);
         var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
-        var pagination = PaginationMeta.Create(page, per_page, totalCount, baseUrl);
+        var pagination = PaginationMeta.Create(page, perPage, totalCount, baseUrl);
         var meta = ApiMeta.Create(pagination: pagination);
         return Ok(ApiResponse<IReadOnlyList<ShipmentResponse>>.Success(items, meta));
     }

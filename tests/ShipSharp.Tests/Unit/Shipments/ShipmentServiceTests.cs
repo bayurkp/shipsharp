@@ -103,8 +103,8 @@ public class ShipmentServiceTests
 
         // Act & Assert
         var act = async () => await _sut.CreateAsync(request, "operator1");
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("*Origin and destination ports must be different*");
+        var ex = await act.Should().ThrowAsync<ValidationException>();
+        ex.Which.Errors.Should().Contain(e => e.Message.Contains("Origin and destination ports must be different"));
     }
 
     [Fact]
