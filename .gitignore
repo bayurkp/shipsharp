@@ -1,0 +1,28 @@
+## Ignore Visual Studio / VS Code / Rider temporary files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Bb]in/
+[Ob]j/
+out/
+
+## Entity Framework Core
+*.db
+*.db-shm
+*.db-wal
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userhost
+
+## OS generated files
+.DS_Store
+Thumbs.db
