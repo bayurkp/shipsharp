@@ -7,7 +7,7 @@ using ShipSharp.Application.Common.Models;
 namespace ShipSharp.API.Auth;
 
 [ApiController]
-[Route("api/auth")]
+[Route("auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -25,11 +25,27 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponse>.Success(response));
     }
 
+    [HttpPost("register")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+    {
+        var response = await _authService.RegisterAsync(request, cancellationToken);
+        return Created($"/api/users/{response.Id}", ApiResponse<UserResponse>.Success(response));
+    }
+
     [HttpPost("refresh")]
     [AllowAnonymous]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var response = await _authService.RefreshTokenAsync(request, cancellationToken);
         return Ok(ApiResponse<LoginResponse>.Success(response));
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
+    {
+        await _authService.LogoutAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Success("Successfully logged out."));
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShipSharp.API.Common.Extensions;
 using ShipSharp.Application.Common.Models;
 using ShipSharp.Application.Customers;
 using ShipSharp.Application.Customers.DTOs;
@@ -7,7 +8,7 @@ using ShipSharp.Application.Customers.DTOs;
 namespace ShipSharp.API.Customers;
 
 [ApiController]
-[Route("api/customers")]
+[Route("customers")]
 [Authorize]
 public class CustomersController : ControllerBase
 {
@@ -20,13 +21,10 @@ public class CustomersController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Operator")]
-    public async Task<IActionResult> GetPaged([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int per_page = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAll([FromQuery] GetCustomersRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _customerService.GetPagedAsync(search, page, per_page, cancellationToken);
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
-        var pagination = PaginationMeta.Create(page, per_page, totalCount, baseUrl);
-        var meta = ApiMeta.Create(pagination: pagination);
-        return Ok(ApiResponse<IReadOnlyList<CustomerResponse>>.Success(items, meta));
+        var (items, totalCount) = await _customerService.GetPagedAsync(query.Search, query.Page, query.PerPage, cancellationToken);
+        return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 
     [HttpGet("{id:guid}")]

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShipSharp.API.Common.Extensions;
 using ShipSharp.Application.Common.Models;
 using ShipSharp.Application.Shipments;
 using ShipSharp.Application.Shipments.DTOs;
@@ -8,7 +9,7 @@ using ShipSharp.Application.Shipments.DTOs;
 namespace ShipSharp.API.Shipments;
 
 [ApiController]
-[Route("api/shipments")]
+[Route("shipments")]
 [Authorize]
 public class ShipmentsController : ControllerBase
 {
@@ -21,13 +22,10 @@ public class ShipmentsController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Operator")]
-    public async Task<IActionResult> GetPaged([FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAll([FromQuery] GetShipmentsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _shipmentService.GetPagedAsync(page, perPage, cancellationToken);
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
-        var pagination = PaginationMeta.Create(page, perPage, totalCount, baseUrl);
-        var meta = ApiMeta.Create(pagination: pagination);
-        return Ok(ApiResponse<IReadOnlyList<ShipmentResponse>>.Success(items, meta));
+        var (items, totalCount) = await _shipmentService.GetPagedAsync(query.Page, query.PerPage, cancellationToken);
+        return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 
     [HttpGet("{id:guid}")]

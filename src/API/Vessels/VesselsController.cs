@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShipSharp.API.Common.Extensions;
 using ShipSharp.Application.Common.Models;
 using ShipSharp.Application.Vessels;
 using ShipSharp.Application.Vessels.DTOs;
@@ -7,7 +8,7 @@ using ShipSharp.Application.Vessels.DTOs;
 namespace ShipSharp.API.Vessels;
 
 [ApiController]
-[Route("api/vessels")]
+[Route("vessels")]
 [Authorize]
 public class VesselsController : ControllerBase
 {
@@ -20,13 +21,10 @@ public class VesselsController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Operator")]
-    public async Task<IActionResult> GetPaged([FromQuery] bool? is_active, [FromQuery] int page = 1, [FromQuery] int per_page = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAll([FromQuery] GetVesselsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _vesselService.GetPagedAsync(is_active, page, per_page, cancellationToken);
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
-        var pagination = PaginationMeta.Create(page, per_page, totalCount, baseUrl);
-        var meta = ApiMeta.Create(pagination: pagination);
-        return Ok(ApiResponse<IReadOnlyList<VesselResponse>>.Success(items, meta));
+        var (items, totalCount) = await _vesselService.GetPagedAsync(query.IsActive, query.Page, query.PerPage, cancellationToken);
+        return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 
     [HttpGet("{id:guid}")]

@@ -17,6 +17,8 @@ public class AuthServiceTests
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly LoginRequestValidator _loginValidator = new();
     private readonly RefreshTokenRequestValidator _refreshValidator = new();
+    private readonly RegisterRequestValidator _registerValidator = new();
+    private readonly LogoutRequestValidator _logoutValidator = new();
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -26,7 +28,9 @@ public class AuthServiceTests
             _passwordServiceMock.Object,
             _tokenServiceMock.Object,
             _loginValidator,
-            _refreshValidator);
+            _refreshValidator,
+            _registerValidator,
+            _logoutValidator);
     }
 
     [Fact]

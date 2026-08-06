@@ -31,6 +31,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers(options =>
 {
     options.SuppressOutputFormatterBuffering = true;
+    options.Conventions.Add(new ShipSharp.API.Common.Conventions.GlobalRoutePrefixConvention(new Microsoft.AspNetCore.Mvc.RouteAttribute("api")));
 })
     .AddJsonOptions(options =>
     {

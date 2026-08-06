@@ -7,7 +7,7 @@ using ShipSharp.Application.Ports.DTOs;
 namespace ShipSharp.API.Ports;
 
 [ApiController]
-[Route("api/ports")]
+[Route("ports")]
 [Authorize]
 public class PortsController : ControllerBase
 {
