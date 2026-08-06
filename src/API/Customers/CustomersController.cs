@@ -23,7 +23,7 @@ public class CustomersController : ControllerBase
     [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> GetAll([FromQuery] GetCustomersRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _customerService.GetPagedAsync(query.Search, query.Page, query.PerPage, cancellationToken);
+        var (items, totalCount) = await _customerService.GetAllAsync(query, cancellationToken);
         return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 

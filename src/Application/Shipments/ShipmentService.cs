@@ -78,10 +78,10 @@ public class ShipmentService : IShipmentService
         };
     }
 
-    public async Task<(IReadOnlyList<ShipmentResponse> Items, int TotalCount)> GetPagedAsync(
-        int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<ShipmentResponse> Items, int TotalCount)> GetAllAsync(
+        GetShipmentsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _shipmentRepository.GetPagedAsync(page, perPage, cancellationToken);
+        var (items, totalCount) = await _shipmentRepository.GetPagedAsync(query.Page, query.PerPage, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }

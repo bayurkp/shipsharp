@@ -34,10 +34,10 @@ public class VesselService : IVesselService
         return MapToResponse(vessel);
     }
 
-    public async Task<(IReadOnlyList<VesselResponse> Items, int TotalCount)> GetPagedAsync(
-        bool? isActive, int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<VesselResponse> Items, int TotalCount)> GetAllAsync(
+        GetVesselsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _vesselRepository.GetPagedAsync(isActive, page, perPage, cancellationToken);
+        var (items, totalCount) = await _vesselRepository.GetPagedAsync(query.IsActive, query.Page, query.PerPage, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }

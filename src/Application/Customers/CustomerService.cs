@@ -34,10 +34,10 @@ public class CustomerService : ICustomerService
         return MapToResponse(customer);
     }
 
-    public async Task<(IReadOnlyList<CustomerResponse> Items, int TotalCount)> GetPagedAsync(
-        string? searchTerm, int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<CustomerResponse> Items, int TotalCount)> GetAllAsync(
+        GetCustomersRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _customerRepository.GetPagedAsync(searchTerm, page, perPage, cancellationToken);
+        var (items, totalCount) = await _customerRepository.GetPagedAsync(query.Search, query.Page, query.PerPage, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }

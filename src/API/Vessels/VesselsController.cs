@@ -23,7 +23,7 @@ public class VesselsController : ControllerBase
     [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> GetAll([FromQuery] GetVesselsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _vesselService.GetPagedAsync(query.IsActive, query.Page, query.PerPage, cancellationToken);
+        var (items, totalCount) = await _vesselService.GetAllAsync(query, cancellationToken);
         return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 

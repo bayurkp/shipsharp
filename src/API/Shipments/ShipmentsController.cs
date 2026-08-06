@@ -24,7 +24,7 @@ public class ShipmentsController : ControllerBase
     [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> GetAll([FromQuery] GetShipmentsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _shipmentService.GetPagedAsync(query.Page, query.PerPage, cancellationToken);
+        var (items, totalCount) = await _shipmentService.GetAllAsync(query, cancellationToken);
         return this.OkPaged(items, query.Page, query.PerPage, totalCount);
     }
 
