@@ -23,21 +23,21 @@ public class VesselRepository : IVesselRepository
         return await _context.Vessels.FirstOrDefaultAsync(v => v.IMONumber.ToUpper() == imoNumber.ToUpper(), cancellationToken);
     }
 
-    public async Task<(IReadOnlyList<Vessel> Items, int TotalCount)> GetPagedAsync(
-        bool? isActive, int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Vessel> Items, int TotalCount)> GetAllAsync(
+        VesselFilter filter, CancellationToken cancellationToken = default)
     {
         var query = _context.Vessels.AsQueryable();
 
-        if (isActive.HasValue)
+        if (filter.IsActive.HasValue)
         {
-            query = query.Where(v => v.IsActive == isActive.Value);
+            query = query.Where(v => v.IsActive == filter.IsActive.Value);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(v => v.CreatedAt)
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
+            .Skip((filter.Page - 1) * filter.PerPage)
+            .Take(filter.PerPage)
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);

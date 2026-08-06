@@ -35,8 +35,8 @@ public class ShipmentRepository : IShipmentRepository
             .FirstOrDefaultAsync(s => s.TrackingNumber.ToUpper() == trackingNumber.ToUpper(), cancellationToken);
     }
 
-    public async Task<(IReadOnlyList<Shipment> Items, int TotalCount)> GetPagedAsync(
-        int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Shipment> Items, int TotalCount)> GetAllAsync(
+        ShipmentFilter filter, CancellationToken cancellationToken = default)
     {
         var query = _context.Shipments
             .Include(s => s.Customer)
@@ -48,8 +48,8 @@ public class ShipmentRepository : IShipmentRepository
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(s => s.CreatedAt)
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
+            .Skip((filter.Page - 1) * filter.PerPage)
+            .Take(filter.PerPage)
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);

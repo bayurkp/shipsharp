@@ -37,7 +37,8 @@ public class CustomerService : ICustomerService
     public async Task<(IReadOnlyList<CustomerResponse> Items, int TotalCount)> GetAllAsync(
         GetCustomersRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _customerRepository.GetPagedAsync(query.Search, query.Page, query.PerPage, cancellationToken);
+        var filter = new CustomerFilter(query.Search, query.Page, query.PerPage);
+        var (items, totalCount) = await _customerRepository.GetAllAsync(filter, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }

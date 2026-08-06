@@ -37,7 +37,8 @@ public class VesselService : IVesselService
     public async Task<(IReadOnlyList<VesselResponse> Items, int TotalCount)> GetAllAsync(
         GetVesselsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _vesselRepository.GetPagedAsync(query.IsActive, query.Page, query.PerPage, cancellationToken);
+        var filter = new VesselFilter(query.IsActive, query.Page, query.PerPage);
+        var (items, totalCount) = await _vesselRepository.GetAllAsync(filter, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }

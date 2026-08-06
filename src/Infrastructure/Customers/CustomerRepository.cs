@@ -23,22 +23,22 @@ public class CustomerRepository : ICustomerRepository
         return await _context.Customers.FirstOrDefaultAsync(c => c.Email.ToLower() == email.ToLower(), cancellationToken);
     }
 
-    public async Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetPagedAsync(
-        string? searchTerm, int page, int perPage, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetAllAsync(
+        CustomerFilter filter, CancellationToken cancellationToken = default)
     {
         var query = _context.Customers.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var term = searchTerm.Trim().ToLower();
+            var term = filter.Search.Trim().ToLower();
             query = query.Where(c => c.Name.ToLower().Contains(term) || c.Email.ToLower().Contains(term));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
+            .Skip((filter.Page - 1) * filter.PerPage)
+            .Take(filter.PerPage)
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);

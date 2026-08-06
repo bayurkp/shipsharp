@@ -81,7 +81,8 @@ public class ShipmentService : IShipmentService
     public async Task<(IReadOnlyList<ShipmentResponse> Items, int TotalCount)> GetAllAsync(
         GetShipmentsRequest query, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _shipmentRepository.GetPagedAsync(query.Page, query.PerPage, cancellationToken);
+        var filter = new ShipmentFilter(query.Page, query.PerPage);
+        var (items, totalCount) = await _shipmentRepository.GetAllAsync(filter, cancellationToken);
         var dtos = items.Select(MapToResponse).ToList();
         return (dtos, totalCount);
     }
