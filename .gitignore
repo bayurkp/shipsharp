@@ -25,6 +25,10 @@ out/
 *.user
 *.userhost
 
+## Logs
+logs/
+*.log
+
 ## OS generated files
 .DS_Store
 Thumbs.db

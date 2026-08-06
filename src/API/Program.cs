@@ -39,8 +39,9 @@ builder.Services.AddControllers(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower));
     });
 
-// API Explorer for Documentation
+// API Explorer & OpenAPI Documentation
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // JWT Authentication Setup
 var jwtSecretKey = builder.Configuration["JwtSettings:SecretKey"] ?? "SuperSecretKeyShipSharpMinLength32Chars!";
@@ -76,13 +77,18 @@ var app = builder.Build();
 // Global Exception Handler Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Scalar API Reference Documentation (at /docs)
+// Scalar API Reference Documentation
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "openapi/{documentName}.json";
+    });
     app.MapScalarApiReference(options =>
     {
         options.WithTitle("ShipSharp API Reference")
                .WithTheme(ScalarTheme.Purple)
+               .WithOpenApiRoutePattern("/openapi/{documentName}.json")
                .WithEndpointPrefix("/docs/{documentName}");
     });
 }
