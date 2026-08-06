@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using ShipSharp.Application.Common.Interfaces;
 using ShipSharp.Domain.Customers;
@@ -38,7 +39,12 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
-        services.AddScoped<IPortRepository, PortRepository>();
+        services.AddMemoryCache();
+        services.AddScoped<PortRepository>();
+        services.AddScoped<IPortRepository>(sp =>
+            new CachedPortRepository(
+                sp.GetRequiredService<PortRepository>(),
+                sp.GetRequiredService<IMemoryCache>()));
         services.AddScoped<IVesselRepository, VesselRepository>();
         services.AddScoped<IShipmentRepository, ShipmentRepository>();
 
